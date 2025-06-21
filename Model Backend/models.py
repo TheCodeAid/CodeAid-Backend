@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import List, Literal
-
 class Dependency(BaseModel):
     depFilePath: str
     content: str
@@ -24,7 +23,6 @@ class ViolatedPrinciple(BaseModel):
     justification: str = Field(..., max_length=300,
                                description="Explanation of why the principle was violated in 2 sentences only.")
 
-
 class Violation(BaseModel):
     file_path: str = Field(..., description="Path of the file containing the violation.")
     violatedPrinciples: List[ViolatedPrinciple] = Field(...,
@@ -32,3 +30,19 @@ class Violation(BaseModel):
 
 class SolidDetectionOutput(BaseModel):
     violations: List[Violation] = Field(..., description="Detected SOLID violations.")
+
+Smell = Literal[
+    "Feature Envy", "Inappropriate Intimacy",
+    "Message Chains", "Middle Man"
+]
+
+class CouplingSmell(BaseModel):
+    smell: Smell = Field(..., description="Type of coupling smell detected.")
+    justification: str = Field(..., max_length=300,
+                               description="Justification for the detected coupling smell in 2 sentences only.")
+class CouplingViolation(BaseModel):
+    filesPaths: List[str] = Field(..., description="Files involved in the coupling smell.")
+    smells: List[CouplingSmell] = Field(..., description="Details about the detected coupling smells.")
+    
+class CouplingDetectionOutput(BaseModel):
+    couplingSmells: List[CouplingViolation] = Field(..., description="Detected coupling code smells.")

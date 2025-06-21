@@ -8,7 +8,7 @@ class CouplingHandler:
 
     def detect(self, file: FileWithDependencies):
         prompt = PromptBuilder.coupling_prompt(file)
-        return self.llm.send_prompt(prompt)
+        return self.llm.send_prompt(prompt) #####################
 
     def refactor(self, file: FileWithDependencies):
         prompt = PromptBuilder.refactor_coupling_prompt(file)

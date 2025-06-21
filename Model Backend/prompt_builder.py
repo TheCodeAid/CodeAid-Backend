@@ -1,5 +1,5 @@
 import json
-from models import FileWithDependencies, SolidDetectionOutput
+from models import FileWithDependencies, SolidDetectionOutput, CouplingDetectionOutput
 
 class PromptBuilder:
     @staticmethod
@@ -68,19 +68,42 @@ class PromptBuilder:
     #         '{"refactoredCode": "..."}'
     #     ])
 
-    # @staticmethod
-    # def coupling_prompt(file: FileWithDependencies) -> str:
-    #     code = PromptBuilder.build_code_bundle(file)
-    #     return "\n".join([
-    #         "You are a senior software engineer.",
-    #         "Detect coupling smells (like Feature Envy, Inappropriate Intimacy, etc.).",
-    #         "Respond in structured JSON only.",
-    #         "## Code:",
-    #         json.dumps(code, ensure_ascii=False),
-    #         "",
-    #         "## Response format:",
-    #         '{"couplingSmells": [{"filesPaths": [...], "smells": [{"smell": "...", "justification": "..."}]}]}'
-    #     ])
+    @staticmethod
+    def coupling_prompt(file: FileWithDependencies) -> str:
+        code = PromptBuilder.build_code_bundle(file)
+        return "\n".join([
+            "You are a software engineer.",
+            "You will be given one file with its file dependencies.",
+            "Your task is to identify and explain any of the following coupling smells:",
+            "",
+            "- Feature Envy: A method that seems more interested in another class than the one it is in, accessing its data and methods frequently.",
+            "- Inappropriate Intimacy: Two classes that share too much information or access each other's internal details excessively.",
+            "- Incomplete Library Class: A library class is missing functionality that should be there, forcing users to add methods or subclasses that break encapsulation.",
+            "- Message Chains: A client asks one object for another object, then that object for another, and so on, forming a long chain of calls.",
+            "- Middle Man: A class that delegates almost everything to another class and does very little itself.",
+            "",
+            "Use a step-by-step reasoning process (Chain of Thought) to evaluate if any of these smells exist in the code.",
+            "For each suspected smell, explain what triggered it, and which class/method is involved.",
+            "",
+            "After your first pass, review your analysis and refine it if necessary.",
+            "Then, critically evaluate your final result.",
+            "- Did you miss any smell?",
+            "- Did you misclassify anything?",
+            "- Could your reasoning be more precise?",
+            "",
+            "Always respond in a structured JSON format. Do not include any explanation outside the JSON.",
+            "You have to extract Coupling code smells from Code according the Pydantic details.",
+            "Be objective and thorough, even if no violations are found.",
+            "Do not generate any introduction or conclusion.",
+            "## Code:",
+            json.dumps(code, ensure_ascii=False),
+            "",
+            "## Pydantic Details:",
+            json.dumps(CouplingDetectionOutput.model_json_schema(), ensure_ascii=False),
+            "",
+            "## Coupling code smells:",
+            "json"
+        ])
 
     # @staticmethod
     # def refactor_coupling_prompt(file: FileWithDependencies) -> str:
