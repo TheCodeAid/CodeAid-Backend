@@ -14,6 +14,7 @@ class ViolatedPrinciple(BaseModel):
     justification: str
 
 Principle = Literal[
+    # "Open-Closed"  "Open/Closed"
     "Single Responsibility", "Open-Closed", "Liskov",
     "Interface Segregation", "Dependency Inversion"
 ]
@@ -46,3 +47,19 @@ class CouplingViolation(BaseModel):
     
 class CouplingDetectionOutput(BaseModel):
     couplingSmells: List[CouplingViolation] = Field(..., description="Detected coupling code smells.")
+
+class RefactoringRequestData(BaseModel):
+    mainFilePath: str
+    content: str
+    dependencies: List[Dependency]
+    violations: List[ViolatedPrinciple] = Field(...,
+                                                    description="List of violated principles with justifications.")
+
+
+
+class RefactoredFile(BaseModel):
+    filePath: str = Field(..., description="Path to the file either created or refactored.")
+    fileContent: str = Field(..., description="The full content of the file")
+
+class RefactoringOutput(BaseModel):
+    refactored_files: List[RefactoredFile] = Field(..., description="List of all refactored files and their changes.")

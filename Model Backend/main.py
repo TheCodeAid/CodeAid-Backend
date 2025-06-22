@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from models import FileWithDependencies, CouplingViolation
+from models import FileWithDependencies, CouplingViolation, RefactoredFile, RefactoringRequestData
 from llm_client import LLMClient
 from handlers.solid_handler import SolidHandler
 from handlers.coupling_handler import CouplingHandler
@@ -62,7 +62,6 @@ def detect_coupling(files: List[FileWithDependencies]):
                     except Exception as ve:
                         print(f"Validation failed for file {f.mainFilePath}: {ve}")
                         continue
-
             results.append({
                 "couplingSmells": coupling_violations
             })
@@ -75,12 +74,35 @@ def detect_coupling(files: List[FileWithDependencies]):
     return results
 
 
-# @app.post("/refactor-solid")
-# def refactor_solid(files: List[FileWithDependencies]):
-#     return [{
-#         "mainFilePath": f.mainFilePath,
-#         "refactoredCode": solid_handler.refactor(f).get("refactoredCode", "")
-#     } for f in files]
+@app.post("/refactor-solid")
+def refactor_solid(files: RefactoringRequestData):
+    print("Received files for refactoring:", files)
+    results = []
+    try:
+        refactor_result = solid_handler.refactor(files)
+        if refactor_result is None:
+            print(f"Warning: refactor returned None for file {files.mainFilePath}")
+            refactoredCode = []
+        else:
+            # Ensure detection_result["couplingSmells"] is properly validated
+            refactoredCode = []
+            for item in refactor_result.get("refactored_files", []):
+                try:
+                    validated_refactor = RefactoredFile(**item)
+                    refactoredCode.append(validated_refactor.model_dump())
+                except Exception as ve:
+                    print(f"Validation failed for file {files.mainFilePath}: {ve}")
+                    continue
+        results.append({
+            "refactored_files": refactoredCode
+        })
+    except Exception as e:
+        print(f"Error processing file {files.mainFilePath}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing {files.mainFilePath}: {str(e)}"
+        )
+    return results
 
 
 
