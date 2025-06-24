@@ -2,11 +2,13 @@ from pydantic import BaseModel, Field
 from typing import List, Literal
 class Dependency(BaseModel):
     depFilePath: str
-    content: str
+    depFileContent: str
 
 class FileWithDependencies(BaseModel):
+    project_id: str
+    chunk_id: int
     mainFilePath: str
-    content: str
+    mainFileContent: str
     dependencies: List[Dependency]
 
 class ViolatedPrinciple(BaseModel):

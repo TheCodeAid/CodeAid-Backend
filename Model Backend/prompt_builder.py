@@ -34,10 +34,10 @@ class PromptBuilder:
         return {
             "main": {
                 "filePath": file.mainFilePath,
-                "content": file.content
+                "content": file.mainFileContent
             },
             "dependencies": [
-                {"filePath": d.depFilePath, "content": d.content} for d in file.dependencies
+                {"filePath": d.depFilePath, "content": d.depFileContent} for d in file.dependencies
             ]
         }
 

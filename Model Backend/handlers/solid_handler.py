@@ -12,8 +12,8 @@ class SolidHandler:
         print("prompt ", prompt)
         response =  self.llmD.send_prompt(prompt)
         print("response ", response)
-        return response
-        # return None
+        return response[0].get("generated_text", {})
+        # return {}
 
     def refactor(self, file: RefactoringRequestData):
         prompt = PromptBuilder.refactor_solid_prompt(file)
