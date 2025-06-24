@@ -64,18 +64,19 @@ def detect_solid(files: List[FileWithDependencies]):
     results = []
     for f in files:
         try:
-            # detection_result = solid_handler.detect(f)
-            # if detection_result is None:
-            #     print(f"Warning: detect returned None for file {f.mainFilePath}")
-            #     violations = []
-            # else:
-            #     violations = extract_response(detection_result)
-            # results.append({
-            #     "mainFilePath": f.mainFilePath,
-            #     
-            # "violations": violations
-            # })
-            return [{'mainFilePath': 'c:\\Users\\marwa\\Downloads\\ToffeeStore\\category.java', 'violations': [{'principle': 'Single Responsibility', 'justification': 'The category class handles both data management (storing items) and presentation logic (displayCategoryItem method). These are two distinct responsibilities that should be separated into different classes.'}, {'principle': 'Dependency Inversion', 'justification': 'The displayCategoryItem method directly depends on concrete item objects. High-level modules should depend on abstractions (interfaces) rather than concrete implementations to decouple dependencies.'}]}] 
+            detection_result = solid_handler.detect(f)
+            if detection_result is None:
+                print(f"Warning: detect returned None for file {f.mainFilePath}")
+                violations = []
+            else:
+                violations = extract_response(detection_result)
+            print("mainFile", f.mainFilePath)
+            print("violations", violations)
+            results.append({
+                "mainFilePath": f.mainFilePath,
+                "violations": violations
+            })
+            # return [{"mainFilePath": f.mainFilePath, "violations":[{'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\shoppingCart.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The shoppingCart class handles multiple responsibilities: managing cart items in memory, persisting items to a file, loading items from a file, and calculating prices. This violates SRP as changes to persistence logic or pricing calculations would require modifying this class.'}, {'principle': 'Open-Closed', 'justification': 'The class is not closed for modification since changes to persistence (e.g., switching from file to database) or pricing logic require direct changes to existing methods like addItemToFile and calcTotalPrice. No extension mechanisms (e.g., abstractions) are provided for these behaviors.'}, {'principle': 'Dependency Inversion', 'justification': 'High-level shoppingCart directly depends on concrete low-level implementations (FileWriter, FileReader) for persistence. It should depend on abstractions (e.g., a PersistenceService interface) rather than concrete file I/O classes.'}]}, {'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\category.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The category class combines data storage (items list) with presentation logic (displayCategoryItem method). This violates SRP as changes to display logic or data structure would both require modifying this class.'}, {'principle': 'Dependency Inversion', 'justification': 'The displayCategoryItem method directly prints to System.out, coupling high-level category logic to a concrete output mechanism. It should depend on an abstraction (e.g., a DisplayService interface) instead of a concrete console.'}]}, {'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\item.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The item class handles both data storage and presentation (displayItem, displayItemForCart methods). This violates SRP as changes to display formats or data structure would require modifying the same class.'}, {'principle': 'Dependency Inversion', 'justification': 'Display methods directly print to System.out, coupling item logic to a concrete output mechanism. High-level item functionality should depend on an abstraction (e.g., a DisplayService interface) rather than a concrete console.'}]}]}]
         except Exception as e:
             print(f"Error processing file {f.mainFilePath}: {str(e)}")
             raise HTTPException(
