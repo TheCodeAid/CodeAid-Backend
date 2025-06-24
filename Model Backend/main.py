@@ -38,8 +38,8 @@ def extract_response(response: str):
     try:
         violations = json.loads(json_part)
         print("Extracted JSON part:", violations)
-        #return violations
-        return [{'file_path': 'c:\\Users\\marwa\\Downloads\\ToffeeStore\\category.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The category class handles both data management (storing items) and presentation logic (displayCategoryItem method). These are two distinct responsibilities that should be separated into different classes.'}, {'principle': 'Dependency Inversion', 'justification': 'The displayCategoryItem method directly depends on concrete item objects. High-level modules should depend on abstractions (interfaces) rather than concrete implementations to decouple dependencies.'}]}]
+        return violations
+        # return [{'file_path': 'c:\\Users\\marwa\\Downloads\\ToffeeStore\\category.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The category class handles both data management (storing items) and presentation logic (displayCategoryItem method). These are two distinct responsibilities that should be separated into different classes.'}, {'principle': 'Dependency Inversion', 'justification': 'The displayCategoryItem method directly depends on concrete item objects. High-level modules should depend on abstractions (interfaces) rather than concrete implementations to decouple dependencies.'}]}]
     except json.JSONDecodeError as e:
         raise ValueError("Failed to parse JSON from response.") from e
 def extract_json_array_from_backticks(response: str):
@@ -100,9 +100,10 @@ def detect_coupling(files: List[FileWithDependencies]):
             # print("coupling_violations", coupling_violations)
             # results.append({
             #     "filesPaths": coupling_violations[0].get("filesPaths", []),
-            #     "couplingSmells": smelling_violations[0].get("smells", [])
+            #     "couplingSmells": coupling_violations[0].get("smells", [])
             # })
-            return [{'filesPaths': ['c:\\Users\\marwa\\Downloads\\ToffeeStore\\category.java', 'c:\\Users\\marwa\\Downloads\\ToffeeStore\\item.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `category.displayCategoryItem()` method exhibits a message chain by calling `items.get(i).getCategory().getName()`. This forces the `category` class to navigate through `item` to `category` again to get the category name, violating the Law of Demeter.'}]}]
+            return [{'filesPaths': ['e:\\Documents\\GitHub\\Instapay_App\\out\\production\\Instapay_App1\\Account.java', 'e:\\Documents\\GitHub\\Instapay_App\\out\\production\\Instapay_App1\\ManagingSigning.java'], 'couplingSmells': [{'smell': 'Incomplete Library Class', 'justification': "Account's withdraw method directly calls DataBase's updateBalanceForSender with an ID, indicating missing functionality in DataBase. This forces Account to handle logic (finding the correct account) that should be encapsulated within DataBase, breaking encapsulation."}]}]
+            # return [{'filesPaths': ['c:\\Users\\marwa\\Downloads\\ToffeeStore\\category.java', 'c:\\Users\\marwa\\Downloads\\ToffeeStore\\item.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `category.displayCategoryItem()` method exhibits a message chain by calling `items.get(i).getCategory().getName()`. This forces the `category` class to navigate through `item` to `category` again to get the category name, violating the Law of Demeter.'}]}]
         except Exception as e:
             print(f"Error processing file {f.mainFilePath}: {str(e)}")
             raise HTTPException(
@@ -150,3 +151,12 @@ def refactor_solid(files: RefactoringRequestData):
 #         "mainFilePath": f.mainFilePath,
 #         "refactoredCode": coupling_handler.refactor(f).get("refactoredCode", "")
 #     } for f in files]
+
+
+# for item in detection_result.get("couplingSmells", []):
+#                     # try:
+#                     #     validated_violation = CouplingViolation(**item)
+#                     #     coupling_violations.append(validated_violation.model_dump())
+#                     # except Exception as ve:
+#                     #     print(f"Validation failed for file {f.mainFilePath}: {ve}")
+#                     #     continu
