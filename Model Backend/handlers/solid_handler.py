@@ -3,18 +3,23 @@ from llm_client import LLMClient
 from models import FileWithDependencies, RefactoringRequestData
 
 class SolidHandler:
-    def __init__(self, llm: LLMClient):
-        self.llm = llm
+    def __init__(self, llmD: LLMClient, llmR: LLMClient):
+        self.llmD = llmD
+        self.llmR = llmR
 
     def detect(self, file: FileWithDependencies):
         prompt = PromptBuilder.solid_prompt(file)
-        # print("prompt ", prompt)
-        # return self.llm.send_prompt(prompt)
-        return None
+        print("prompt ", prompt)
+        response =  self.llmD.send_prompt(prompt)
+        print("response ", response)
+        return response
+        # return None
 
     def refactor(self, file: RefactoringRequestData):
         prompt = PromptBuilder.refactor_solid_prompt(file)
-        # return self.llm.send_prompt(prompt)
-        return  None
+        response = self.llmR.send_prompt(prompt)
+        print("response ", response)
+        return response
+        # return  None
 
 
