@@ -1,5 +1,5 @@
 import json
-from models import FileWithDependencies, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput
+from models import CouplingRefactorRequest, CouplingViolation, FileWithDependencies, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput
 
 
 class PromptBuilder:
@@ -9,7 +9,7 @@ class PromptBuilder:
 class PromptBuilder:
 
     @staticmethod
-    def build_code_bundle_refactor(file: RefactoringRequestData) -> dict:
+    def build_code_bundle_refactorSolid(file: RefactoringRequestData) -> dict:
         return {
             "prompt": {
                 "mainFilePath": file.mainFilePath,
@@ -17,7 +17,7 @@ class PromptBuilder:
                 "dependencies": [
                     {
                         "filePath": dep.depFilePath,
-                        "fileContent": dep.content
+                        "fileContent": dep.depFileContent
                     } for dep in file.dependencies
                 ]
             },
@@ -29,15 +29,37 @@ class PromptBuilder:
             ]
         }
 
+
+    @staticmethod
+    def build_code_bundle_refactorCoupling(data: dict) -> dict:
+        return {
+            "prompt": {
+                "filePaths": data["filesPaths"],
+                "filesContent": [
+                    {
+                        "filePath": f["filePath"],
+                        "content": f["content"]
+                    } for f in data.get("content", [])
+                ]
+            },
+            "couplingSmells": [
+                {
+                    "smell": smell["smell"],
+                    "justification": smell["justification"]
+                } for smell in data.get("smells", [])
+            ]
+        }
+
+
     @staticmethod
     def build_code_bundle(file: FileWithDependencies):
         return {
             "main": {
                 "filePath": file.mainFilePath,
-                "content": file.content
+                "content": file.mainFileContent
             },
             "dependencies": [
-                {"filePath": d.depFilePath, "content": d.content} for d in file.dependencies
+                {"filePath": d.depFilePath, "content": d.depFileContent} for d in file.dependencies
             ]
         }
 
@@ -84,7 +106,7 @@ class PromptBuilder:
 
     @staticmethod
     def refactor_solid_prompt(file: FileWithDependencies) -> str:
-        code = PromptBuilder.build_code_bundle_refactor(file)
+        code = PromptBuilder.build_code_bundle_refactorSolid(file)
         return "\n".join([
                         "You are an expert Java developer specialized in applying Single Responsibility and Open-Closed principles through code refactoring.",
                         "You will be given one main Java file, with some dependencies (maybe none) along with a structured JSON detailing the detected Single Responsibility, Open-Closed violations in the main file.",
@@ -163,15 +185,39 @@ class PromptBuilder:
             "json"
         ])
 
-    # @staticmethod
-    # def refactor_coupling_prompt(file: FileWithDependencies) -> str:
-    #     code = PromptBuilder.build_code_bundle(file)
-    #     return "\n".join([
-    #         "You are a senior software engineer.",
-    #         "Refactor the code to reduce coupling smells. Return only the refactored version of the main file.",
-    #         "## Code:",
-    #         json.dumps(code, ensure_ascii=False),
-    #         "",
-    #         "## Response format:",
-    #         '{"refactoredCode": "..."}'
-    #     ])
+    @staticmethod
+    def refactor_coupling_prompt(file: CouplingRefactorRequest) -> str:
+        code = PromptBuilder.build_code_bundle_refactorCoupling(file)
+        return "\n".join([
+                        "You are an expert Java developer focused on improving code maintainability by eliminating coupling code smells.",
+                        "You will be given one or more Java files, along with a structured JSON identifying the detected coupling smells.",
+                        "Your task is to refactor the code to reduce or eliminate excessive coupling while preserving intended behavior.",
+                        "",
+                        "For reference, here are the coupling smells you are expected to address:",
+                        "- Feature Envy: A method accesses data from another class more than from its own.",
+                        "- Inappropriate Intimacy: Classes that are too familiar and frequently access each other's internals.",
+                        "- Incomplete Library Class: A library or third-party class lacks required features, leading users to implement workaround logic.",
+                        "- Message Chains: A method navigates through multiple objects to retrieve a result (e.g., a.getB().getC().doSomething()).",
+                        "- Middle Man: A class delegates most of its work to another class and adds little or no behavior of its own.",
+                        "",
+                        "Apply a step-by-step reasoning process to decide how best to restructure the design.",
+                        "After making your initial refactor, recheck the output and refine it if necessary.",
+                        "Reflect on your work: did you overlook any issue? Did your solution create a new one? If so, revise it.",
+                        "",
+                        "Do not include any explanation outside the JSON.",
+                        "You must follow the format defined in the Pydantic schema for Coupling Refactoring output.",
+                        "",
+                        "Be precise, complete, and objective. If no changes are needed, reflect that in the response.",
+                        "Do not generate any introduction or conclusion."
+                        "## Code:",
+                        json.dumps(code["prompt"], ensure_ascii=False),
+                        "",
+                        "## Coupling code smells:",
+                        json.dumps(code["couplingSmells"], ensure_ascii=False),
+                        "",
+                        "## Pydantic Details:",
+                        json.dumps(RefactoringOutput.model_json_schema(), ensure_ascii=False),
+                        "",
+                        "## Refactored Code:",
+                        "```json"
+                    ])

@@ -2,13 +2,18 @@ from pydantic import BaseModel, Field
 from typing import List, Literal
 class Dependency(BaseModel):
     depFilePath: str
-    content: str
-
+    depFileContent: str
+    
 class FileWithDependencies(BaseModel):
     mainFilePath: str
-    content: str
+    mainFileContent: str
     dependencies: List[Dependency]
 
+class DetectReqData(BaseModel):
+    project_id: str
+    chunk_id: int
+    content: FileWithDependencies
+    
 class ViolatedPrinciple(BaseModel):
     principle: str
     justification: str
@@ -63,3 +68,13 @@ class RefactoredFile(BaseModel):
 
 class RefactoringOutput(BaseModel):
     refactored_files: List[RefactoredFile] = Field(..., description="List of all refactored files and their changes.")
+
+
+class FileContent(BaseModel):
+    filePath: str
+    content: str
+
+class CouplingRefactorRequest(BaseModel):
+    filesPaths: List[str]
+    smells: List[CouplingSmell]
+    content: List[FileContent]

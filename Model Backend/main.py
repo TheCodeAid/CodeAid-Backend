@@ -2,10 +2,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from models import FileWithDependencies, CouplingViolation, RefactoredFile, RefactoringRequestData
+from models import CouplingRefactorRequest, FileWithDependencies, CouplingViolation, RefactoredFile, RefactoringRequestData, DetectReqData
 from llm_client import LLMClient
 from handlers.solid_handler import SolidHandler
 from handlers.coupling_handler import CouplingHandler
+import traceback
+
+
 
 app = FastAPI()
 app.add_middleware(
@@ -19,38 +22,39 @@ solid_handler = SolidHandler(llm)
 coupling_handler = CouplingHandler(llm)
 
 @app.post("/detect-solid")
-def detect_solid(files: List[FileWithDependencies]):
+def detect_solid(files: List[DetectReqData]):
     # print("Received files:", files)
     results = []
     for f in files:
         try:
-            detection_result = solid_handler.detect(f)
+            print("Calling solid_handler.detect with:", f.content)
+            detection_result = solid_handler.detect(f.content)
             if detection_result is None:
-                print(f"Warning: detect returned None for file {f.mainFilePath}")
+                print(f"Warning: detect returned None for file {f.content.mainFilePath}")
                 violations = []
             else:
                 violations = detection_result.get("violations", [])
             results.append({
-                "mainFilePath": f.mainFilePath,
+                "mainFilePath": f.content.mainFilePath,
                 "violations": violations
             })
         except Exception as e:
-            print(f"Error processing file {f.mainFilePath}: {str(e)}")
+            print(f"Error processing file {f.content.mainFilePath}: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Error processing {f.mainFilePath}: {str(e)}"
+                detail=f"Error processing {f.content.mainFilePath}: {str(e)}"
             )
     return results
 
 
 @app.post("/detect-coupling")
-def detect_coupling(files: List[FileWithDependencies]):
+def detect_coupling(files: List[DetectReqData]):
     results = []
     for f in files:
         try:
-            detection_result = coupling_handler.detect(f)
+            detection_result = coupling_handler.detect(f.content)
             if detection_result is None:
-                print(f"Warning: detect returned None for file {f.mainFilePath}")
+                print(f"Warning: detect returned None for file {f.content.mainFilePath}")
                 coupling_violations = []
             else:
                 # Ensure detection_result["couplingSmells"] is properly validated
@@ -60,17 +64,18 @@ def detect_coupling(files: List[FileWithDependencies]):
                         validated_violation = CouplingViolation(**item)
                         coupling_violations.append(validated_violation.model_dump())
                     except Exception as ve:
-                        print(f"Validation failed for file {f.mainFilePath}: {ve}")
+                        print(f"Validation failed for file {f.content.mainFilePath}: {ve}")
                         continue
             results.append({
                 "couplingSmells": coupling_violations
             })
         except Exception as e:
-            print(f"Error processing file {f.mainFilePath}: {str(e)}")
+            print(f"Error processing file {f.content.mainFilePath}: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Error processing {f.mainFilePath}: {str(e)}"
+                detail=f"Error processing {f.content.mainFilePath}: {str(e)}"
             )
+            
     return results
 
 
@@ -106,9 +111,33 @@ def refactor_solid(files: RefactoringRequestData):
 
 
 
-# @app.post("/refactor-coupling")
-# def refactor_coupling(files: List[FileWithDependencies]):
-#     return [{
-#         "mainFilePath": f.mainFilePath,
-#         "refactoredCode": coupling_handler.refactor(f).get("refactoredCode", "")
-#     } for f in files]
+@app.post("/refactor-coupling")
+def refactor_coupling(files: List[CouplingRefactorRequest]):
+    print("Received files for refactoring:", files)
+    results = []
+    for f in files:
+            try:
+                refactor_result = coupling_handler.refactor(f)
+                if refactor_result is None:
+                    print(f"Warning: refactor returned None for file {f.filesPaths}")
+                    refactoredCode = []
+                else:
+                    # Ensure detection_result["couplingSmells"] is properly validated
+                    refactoredCode = []
+                    for item in refactor_result.get("refactored_files", []):
+                        try:
+                            validated_violation = RefactoredFile(**item)
+                            refactoredCode.append(validated_violation.model_dump())
+                        except Exception as ve:
+                            print(f"Validation failed for file {f.filesPaths}: {ve}")
+                            continue
+                results.append({
+                    "refactored_files": refactoredCode
+                })
+            except Exception as e:
+                print(f"Error processing file {f.filesPaths}: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error processing {f.filesPaths}: {str(e)}"
+                )
+            return results
