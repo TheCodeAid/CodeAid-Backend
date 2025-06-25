@@ -50,8 +50,10 @@ class CouplingDetectionOutput(BaseModel):
     couplingSmells: List[CouplingViolation] = Field(..., description="Detected coupling code smells.")
 
 class RefactoringRequestData(BaseModel):
+    project_id: str
+    chunk_id: int
     mainFilePath: str
-    content: str
+    mainFileContent: str
     dependencies: List[Dependency]
     violations: List[ViolatedPrinciple] = Field(...,
                                                     description="List of violated principles with justifications.")

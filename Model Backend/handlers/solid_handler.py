@@ -8,13 +8,13 @@ class SolidHandler:
         self.llmR = llmR
 
     def detect(self, file: FileWithDependencies):
-        prompt = PromptBuilder.solid_prompt(file)
-        # print("prompt ", prompt)
-        response =  self.llmD.send_prompt(prompt)
-        # print("response ", response)
-        return response[0].get("generated_text", {})
-        # return {}
-        # return None
+        # prompt = PromptBuilder.solid_prompt(file)
+        # # print("prompt ", prompt)
+        # response =  self.llmD.send_prompt(prompt)
+        # # print("response ", response)
+        # return response[0].get("generated_text", {})
+        return {}
+        #return None
 
     def refactor(self, file: RefactoringRequestData):
         prompt = PromptBuilder.refactor_solid_prompt(file)
