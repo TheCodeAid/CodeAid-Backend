@@ -10,7 +10,7 @@ class CouplingHandler:
         prompt = PromptBuilder.coupling_prompt(file)
         response = self.llm.send_prompt(prompt) #####################
         return response[0].get("generated_text", {})
-        #return None 
+        # return None 
         
     def refactor(self, file: FileWithDependencies):
         prompt = PromptBuilder.refactor_coupling_prompt(file)
