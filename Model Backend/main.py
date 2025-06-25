@@ -70,19 +70,24 @@ def detect_solid(files: List[FileWithDependencies]):
     results = []
     for f in files:
         try:
-            # detection_result = solid_handler.detect(f)
-            # if detection_result is None:
-            #     print(f"Warning: detect returned None for file {f.mainFilePath}")
-            #     violations = []
-            # else:
-            #     violations = extract_response(detection_result)
-            # print("mainFile", f.mainFilePath)
-            # print("violations", violations)
-            # results.append({
-            #     "mainFilePath": f.mainFilePath,
-            #     "violations": violations
-            # })
-            return [{"mainFilePath": f.mainFilePath, "violations":[{'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\shoppingCart.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The shoppingCart class handles multiple responsibilities: managing cart items in memory, persisting items to a file, loading items from a file, and calculating prices. This violates SRP as changes to persistence logic or pricing calculations would require modifying this class.'}, {'principle': 'Open-Closed', 'justification': 'The class is not closed for modification since changes to persistence (e.g., switching from file to database) or pricing logic require direct changes to existing methods like addItemToFile and calcTotalPrice. No extension mechanisms (e.g., abstractions) are provided for these behaviors.'}, {'principle': 'Dependency Inversion', 'justification': 'High-level shoppingCart directly depends on concrete low-level implementations (FileWriter, FileReader) for persistence. It should depend on abstractions (e.g., a PersistenceService interface) rather than concrete file I/O classes.'}]}, {'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\category.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The category class combines data storage (items list) with presentation logic (displayCategoryItem method). This violates SRP as changes to display logic or data structure would both require modifying this class.'}, {'principle': 'Dependency Inversion', 'justification': 'The displayCategoryItem method directly prints to System.out, coupling high-level category logic to a concrete output mechanism. It should depend on an abstraction (e.g., a DisplayService interface) instead of a concrete console.'}]}, {'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\item.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The item class handles both data storage and presentation (displayItem, displayItemForCart methods). This violates SRP as changes to display formats or data structure would require modifying the same class.'}, {'principle': 'Dependency Inversion', 'justification': 'Display methods directly print to System.out, coupling item logic to a concrete output mechanism. High-level item functionality should depend on an abstraction (e.g., a DisplayService interface) rather than a concrete console.'}]}]}]
+            detection_result = solid_handler.detect(f)
+            if detection_result is None:
+                print(f"Warning: detect returned None for file {f.mainFilePath}")
+                violations = []
+            else:
+                violations = extract_response(detection_result)
+            print("mainFile", f.mainFilePath)
+            print("violations", violations)
+            if len(violations) == 0:
+                print(f"No SOLID violations detected for file {f.mainFilePath}")
+                violations = []
+            else:
+                # Ensure each violation is validated
+                results.append({
+                    "mainFilePath": f.mainFilePath,
+                    "violations": violations
+                })
+            # return [{"mainFilePath": f.mainFilePath, "violations":[{'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\shoppingCart.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The shoppingCart class handles multiple responsibilities: managing cart items in memory, persisting items to a file, loading items from a file, and calculating prices. This violates SRP as changes to persistence logic or pricing calculations would require modifying this class.'}, {'principle': 'Open-Closed', 'justification': 'The class is not closed for modification since changes to persistence (e.g., switching from file to database) or pricing logic require direct changes to existing methods like addItemToFile and calcTotalPrice. No extension mechanisms (e.g., abstractions) are provided for these behaviors.'}, {'principle': 'Dependency Inversion', 'justification': 'High-level shoppingCart directly depends on concrete low-level implementations (FileWriter, FileReader) for persistence. It should depend on abstractions (e.g., a PersistenceService interface) rather than concrete file I/O classes.'}]}, {'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\category.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The category class combines data storage (items list) with presentation logic (displayCategoryItem method). This violates SRP as changes to display logic or data structure would both require modifying this class.'}, {'principle': 'Dependency Inversion', 'justification': 'The displayCategoryItem method directly prints to System.out, coupling high-level category logic to a concrete output mechanism. It should depend on an abstraction (e.g., a DisplayService interface) instead of a concrete console.'}]}, {'file_path': 'e:\\Downloads\\Telegram Desktop\\ToffeeStore\\ToffeeStore\\item.java', 'violatedPrinciples': [{'principle': 'Single Responsibility', 'justification': 'The item class handles both data storage and presentation (displayItem, displayItemForCart methods). This violates SRP as changes to display formats or data structure would require modifying the same class.'}, {'principle': 'Dependency Inversion', 'justification': 'Display methods directly print to System.out, coupling item logic to a concrete output mechanism. High-level item functionality should depend on an abstraction (e.g., a DisplayService interface) rather than a concrete console.'}]}]}]
         except Exception as e:
             print(f"Error processing file {f.mainFilePath}: {str(e)}")
             raise HTTPException(
@@ -97,25 +102,26 @@ def detect_coupling(files: List[FileWithDependencies]):
     results = []
     for f in files:
         try:
-            detection_result = coupling_handler.detect(f)
-            if detection_result is None:
-                print(f"Warning: detect returned None for file {f.mainFilePath}")
-                coupling_violations = []
-            else:
-                # Ensure detection_result["couplingSmells"] is properly validated
-                coupling_violations = extract_response(detection_result)
-            print("coupling_violations", coupling_violations)
-            if len(coupling_violations) == 0:
-                print(f"No coupling violations detected for file {f.mainFilePath}")
-                results.append({
-                    "filesPaths": [f.mainFilePath],
-                    "couplingSmells": []
-                })
-            else:
-                results.append({
-                    "filesPaths": coupling_violations[0].get("filesPaths", []),
-                    "couplingSmells": coupling_violations[0].get("smells", [])
-                })
+            # detection_result = coupling_handler.detect(f)
+            # if detection_result is None:
+            #     print(f"Warning: detect returned None for file {f.mainFilePath}")
+            #     coupling_violations = []
+            # else:
+            #     # Ensure detection_result["couplingSmells"] is properly validated
+            #     coupling_violations = extract_response(detection_result)
+            # print("coupling_violations", coupling_violations)
+            # if len(coupling_violations) == 0:
+            #     print(f"No coupling violations detected for file {f.mainFilePath}")
+            #     results.append({
+            #         "couplingSmells": []
+            #     })
+            # return[{'filesPaths': ['e:\\FCAI\\secondYear\\secondSemester\\sw\\Assignments\\ToffeeStore\\ToffeeStore\\item.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `displayItem()` and `displayItemForCart()` methods in the `item` class exhibit message chains by calling `category.getName()`. This forces the `item` class to navigate through its `category` object to get a name, coupling it to the internal structure of the `category` class.'}]}]
+            return [{"couplingSmells": [{'filesPaths': ['e:\\FCAI\\secondYear\\secondSemester\\sw\\Assignments\\ToffeeStore\\ToffeeStore\\item.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `displayItem()` and `displayItemForCart()` methods in the `item` class exhibit message chains by calling `category.getName()`. This forces the `item` class to navigate through its `category` object to get a name, coupling it to the internal structure of the `category` class.'}]}]}]
+            # return [{"filesPaths": ['e:\\FCAI\\secondYear\\secondSemester\\sw\\Assignments\\ToffeeStore\\ToffeeStore\\item.java'], "couplingSmells": [{'filesPaths': ['e:\\FCAI\\secondYear\\secondSemester\\sw\\Assignments\\ToffeeStore\\ToffeeStore\\item.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `displayItem()` and `displayItemForCart()` methods in the `item` class exhibit message chains by calling `category.getName()`. This forces the `item` class to navigate through its `category` object to get a name, coupling it to the internal structure of the `category` class.'}]}]}, {"filesPaths": ['e:\\FCAI\\secondYear\\secondSemester\\sw\\Assignments\\ToffeeStore\\ToffeeStore\\ShoppingCart.java'], "couplingSmells": [{'filesPaths': ['e:\\FCAI\\secondYear\\secondSemester\\sw\\Assignments\\ToffeeStore\\ToffeeStore\\ShoppingCart.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `displayItem()` and `displayItemForCart()` methods in the `item` class exhibit message chains by calling `category.getName()`. This forces the `item` class to navigate through its `category` object to get a name, coupling it to the internal structure of the `category` class.'}]}]}]
+            # else:
+            #     results.append({
+            #         "couplingSmells": coupling_violations
+            #     })
             # return [{'filesPaths': ['e:\\Documents\\GitHub\\Instapay_App\\out\\production\\Instapay_App1\\Account.java', 'e:\\Documents\\GitHub\\Instapay_App\\out\\production\\Instapay_App1\\ManagingSigning.java'], 'couplingSmells': [{'smell': 'Incomplete Library Class', 'justification': "Account's withdraw method directly calls DataBase's updateBalanceForSender with an ID, indicating missing functionality in DataBase. This forces Account to handle logic (finding the correct account) that should be encapsulated within DataBase, breaking encapsulation."}]}]
             # return [{'filesPaths': ['c:\\Users\\marwa\\Downloads\\ToffeeStore\\category.java', 'c:\\Users\\marwa\\Downloads\\ToffeeStore\\item.java'], 'smells': [{'smell': 'Message Chains', 'justification': 'The `category.displayCategoryItem()` method exhibits a message chain by calling `items.get(i).getCategory().getName()`. This forces the `category` class to navigate through `item` to `category` again to get the category name, violating the Law of Demeter.'}]}]
         except Exception as e:

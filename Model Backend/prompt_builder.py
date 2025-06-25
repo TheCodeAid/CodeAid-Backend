@@ -131,7 +131,7 @@ class PromptBuilder:
         code = PromptBuilder.build_code_bundle(file)
         return "\n".join([
             "You are a software engineer.",
-            "You will be given one file with its file dependencies.",
+            "You will be given one file with its file dependencies(possibly none).",
             "Your task is to identify and explain any of the following coupling smells:",
             "",
             "- Feature Envy: A method that seems more interested in another class than the one it is in, accessing its data and methods frequently.",

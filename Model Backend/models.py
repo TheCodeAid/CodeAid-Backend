@@ -16,7 +16,6 @@ class ViolatedPrinciple(BaseModel):
     justification: str
 
 Principle = Literal[
-    # "Open-Closed"  "Open/Closed"
     "Single Responsibility", "Open-Closed", "Liskov",
     "Interface Segregation", "Dependency Inversion"
 ]
