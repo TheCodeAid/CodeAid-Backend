@@ -1,5 +1,5 @@
 import json
-from models import FileWithDependencies, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput
+from models import FileWithDependencies, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput,Dependency
 
 
 class PromptBuilder:
@@ -12,14 +12,8 @@ class PromptBuilder:
     def build_code_bundle_refactor(file: RefactoringRequestData) -> dict:
         return {
             "prompt": {
-                "mainFilePath": file.mainFilePath,
-                "mainFileContent": file.mainFileContent,
-                "dependencies": [
-                    {
-                        "filePath": dep.depFilePath,
-                        "fileContent": dep.depFileContent
-                    } for dep in file.dependencies
-                ]
+                "mainFilePath": file.data[0].mainFilePath,
+                "mainFileContent": file.data[0].mainFileContent,
             },
             "violations": [
                 {
@@ -27,6 +21,23 @@ class PromptBuilder:
                     "justification": v.justification
                 } for v in file.violations
             ]
+        }
+    
+    @staticmethod
+    def build_code_bundle_refactor_dep(old_main_file: str, dependencies: list[Dependency], refactored_files: RefactoringOutput) -> dict:
+        return {
+            "old": {
+                "mainFileContent": old_main_file,
+            },
+            "new": {
+                "refactored_files": refactored_files, 
+            },
+            "dependencies": [
+                {
+                    "filePath": dep.depFilePath,
+                    "fileContent": dep.depFileContent
+                } for dep in dependencies
+            ]  
         }
 
     @staticmethod
@@ -83,11 +94,11 @@ class PromptBuilder:
 
 
     @staticmethod
-    def refactor_solid_prompt(file: FileWithDependencies) -> str:
+    def refactor_solid_prompt(file: RefactoringRequestData) -> str:
         code = PromptBuilder.build_code_bundle_refactor(file)
         return "\n".join([
             "You are an expert Java developer specialized in applying Single Responsibility and Open-Closed principles through code refactoring.",
-            "You will be given one main Java file, with some dependencies (maybe none) along with a structured JSON detailing the detected Single Responsibility, Open-Closed violations in the main file.",
+            "You will be given one main Java file, along with a structured JSON detailing the detected Single Responsibility, Open-Closed violations in the main file.",
             "Your task is to refactor the code to eliminate these violations while maintaining and improving overall code clarity and design.",
             "",
             "For reference, here are brief descriptions of the SRP and OCP principles:",
@@ -99,11 +110,6 @@ class PromptBuilder:
             "You should return the main file in case of being updated with its updated content.",
             "You should return the created files with its content.",
             "Never add multiple classes/enums/interfaces in the same file; if needed, create a new file for each.",
-            "After refactoring the main file and adding any new files, you must:",
-            "- Review all dependency files for references to the main file’s class, methods, or fields.",
-            "- Update those dependency files to reflect any renames, deletions, or new methods introduced in your refactor.",
-            "- Ensure there are no invalid references in dependency files (such as calling a method that no longer exists).",
-            "All updated dependency files should be included in your output alongside the main file and new files, following the Pydantic schema format.",
             "Don't return a file unless it is updated or created.",
             "",
             "## Critical Output and Formatting Rules:",
@@ -125,6 +131,68 @@ class PromptBuilder:
             "## Refactored Code:",
             "```json"
         ])
+    
+    @staticmethod
+    def refactor_dependencies(file: RefactoringRequestData) -> str:
+        code = PromptBuilder.build_code_bundle_refactor(file)
+        return "\n".join([
+            "You are an expert Java developer specialized in updating all provided dependency files to be compatible with a newly refactored version of a Java class.",
+
+            "Context:",
+            "You are given:",
+            "- The original version of the main Java class (Main File - OLD)",
+            "- The refactored version of the main class (Main File - NEW)",
+            "- Any new classes created during refactoring",
+            "- A list of dependency files that previously referenced the old main file",
+
+            "These dependencies must now be updated to reference and interact correctly with the new main file and its updated structure.",
+            "Follow this step-by-step process:",
+
+            "1. Understand the changes:",
+            "- Compare the old and new versions of the main file.",
+            "- Identify renamed, moved, or removed methods, fields, and classes.",
+            "- Understand how the newly created classes relate to the refactoring.",
+
+            "2. Update dependencies:",
+            "- For each dependency file:",
+            "    - Locate references to the old structure.",
+            "    - Modify imports, method calls, field accesses, or object instantiations to match the new design.",
+            "    - Ensure compatibility with newly introduced classes or interfaces.",
+
+            "3. Iterative improvement:",
+            "- After updating each file, assess whether it fully conforms to the refactored structure.",
+            "- Make any additional modifications if inconsistencies or outdated patterns remain.",
+
+            "4. Self-Critique & Validation:",
+            "- After all updates, analyze your changes:",
+            "    - Did you miss any reference to the old class structure?",
+            "    - Are there inconsistencies or deprecated usages?",
+            "    - Are there redundant imports or logic?",
+            "- Fix issues accordingly and explain key changes and justifications.",
+
+            "## Critical Output and Formatting Rules:",
+            "1. **Comment Formatting for Unfixable Dependencies:** This is a strict requirement. If a dependency cannot be updated due to missing context, you must leave a comment. IT IS CRITICAL that you add a line break (`\\n`) immediately after the comment. The code that follows the comment MUST start on a new line to avoid compilation errors.",
+            "2. **No Extra Content:** Do not include any explanation, introduction, or conclusion outside the final JSON output.",
+            "3. **Code Formatting:** Return the code in one line without extra spaces or break lines. Don't add any comments.",
+            "4. **JSON Structure:** You must follow the format defined in the Pydantic schema for the refactoring output.",
+
+            "Be precise, complete, and objective. If no changes are needed, reflect that in the response.",
+            "## Old Main File:",
+            json.dumps(code["old"], ensure_ascii=False),
+            "",
+            "## New Main file with new classes created during refactoring:",
+            json.dumps(code["new"], ensure_ascii=False),
+            "",
+            "## Dependencies:",
+            json.dumps(code["dependencies"], ensure_ascii=False),
+            "",
+            "## Pydantic Details:",
+            json.dumps(RefactoringOutput.model_json_schema(), ensure_ascii=False),
+            "",
+            "## Refactored Dependencies:",
+            "```json"
+        ])
+
 
     @staticmethod
     def coupling_prompt(file: FileWithDependencies) -> str:
@@ -162,6 +230,14 @@ class PromptBuilder:
             "## Coupling code smells:",
             "json"
         ])
+
+    
+        # "After refactoring the main file and adding any new files, you must:",
+        #     "- Review all dependency files for references to the main file’s class, methods, or fields.",
+        #     "- Update those dependency files to reflect any renames, deletions, or new methods introduced in your refactor.",
+        #     "- Ensure there are no invalid references in dependency files (such as calling a method that no longer exists).",
+        #     "All updated dependency files should be included in your output alongside the main file and new files, following the Pydantic schema format.",
+
 
     # @staticmethod
     # def refactor_coupling_prompt(file: FileWithDependencies) -> str:
