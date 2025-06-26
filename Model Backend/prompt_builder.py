@@ -1,6 +1,6 @@
 import json
-from typing import List
-from models import FileWithDependencies, RefactoredFile, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput,Dependency
+from typing import Dict, List
+from models import FileWithDependencies, RefactoredFile, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput,Dependency, couplingSuggestionIn, couplingSuggestionOut
 
 
 class PromptBuilder:
@@ -40,7 +40,29 @@ class PromptBuilder:
                 } for dep in dependencies
             ]  
         }
-
+    
+    @staticmethod
+    def build_coupling_code_bundle_refactor(input_data: couplingSuggestionIn) -> dict:
+        return {
+            "coupling_smells": [
+                {
+                    "files": [
+                        {
+                            "filePath": f.filePath,
+                            "fileContent": f.content
+                        } for f in violation.files
+                    ],
+                    "smells": [
+                        {
+                            "smell": s.smell,
+                            "justification": s.justification
+                        } for s in violation.smells
+                    ]
+                }
+                for violation in input_data.coupling_smells
+            ]
+        }
+    
     @staticmethod
     def build_code_bundle(file: FileWithDependencies):
         return {
@@ -239,6 +261,49 @@ class PromptBuilder:
         #     "- Ensure there are no invalid references in dependency files (such as calling a method that no longer exists).",
         #     "All updated dependency files should be included in your output alongside the main file and new files, following the Pydantic schema format.",
 
+    @staticmethod
+    def refactor_coupling_prompt(input_data: couplingSuggestionIn) -> str:
+        print("input_data", input_data)
+        code = PromptBuilder.build_coupling_code_bundle_refactor(input_data)
+        print("code", code)
+        return "\n".join([
+            "You are an expert software engineer specialized in clean code and design principles like coupling, cohesion, and SOLID.",
+            "You will be given:",
+            "",
+            "1. A list of files (each with its file path and file content).",
+            "2. The detected coupling violations between these files — including which files are tightly coupled and how (especially: Feature Envy, Inappropriate Intimacy, Message Chains, Middle Man).",
+            "",
+            "Your task is to:",
+            "- Analyze the violations carefully.",
+            "- Suggest **concise step-by-step refactoring solutions** for each violation without providing code.",
+            "- Use design patterns (e.g., Dependency Injection, Observer, Interface Segregation) where relevant.",
+            "- Avoid repeating the same general advice; be specific to the code structure I provide.",
+            "",
+            "Please format the output clearly, like:",
+            "===",
+            "Coupling Violation: [Short Description]",
+            "Files Involved: [file1.java] → [file2.java]",
+            "",
+            "Suggested Steps:",
+            "1. ...",
+            "2. ...",
+            "3. ...",
+            "===",
+            "",
+            "Always respond in a structured JSON format. Do not include any explanation outside the JSON.",
+            "You have to return the fixes according to the Pydantic schema below.",
+            "Be objective and thorough, even if no suggestions are needed.",
+            "Do not generate any introduction or conclusion.",
+            "",
+            "## files and the smells in between them:",
+            json.dumps(code["coupling_smells"], ensure_ascii=False),
+            "",
+            "## Pydantic Details:",
+            json.dumps(couplingSuggestionOut.model_json_schema(), ensure_ascii=False),
+            "",
+            "## Suggested Fixes:",
+            "```json"
+        ])
 
     # @staticmethod
     # def refactor_coupling_prompt(file: FileWithDependencies) -> str:

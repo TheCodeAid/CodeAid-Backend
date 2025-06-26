@@ -72,5 +72,29 @@ class RefactoringRequestData(BaseModel):
                                                     description="List of violated principles with justifications.")
 
 
+# input pydantics 
+class file(BaseModel):
+    filePath: str  # Path to the file
+    content: str  # Content of the file
+
+class smell(BaseModel):
+    smell: str  # Type of coupling smell (e.g., "Message Chains")
+    justification: str  # Justification for the smell
+
+class CouplingViolations(BaseModel):
+    files: List[file]  # List of file dictionaries with filePath and fileContent
+    smells: List[smell]  # List of detected coupling smells with smell type and justification
+
+class couplingSuggestionIn(BaseModel):
+    coupling_smells: List[CouplingViolations]
+
+#output pydantics
+class CouplingViolationFix(BaseModel):
+    smell: str  # e.g., "Message Chains"
+    files_involved: List[str]  # e.g., ["AverageTemperatureChart.java", "XYSeriesRenderer.java"]
+    suggested_steps: List[str]  # Step-by-step suggestions
+
+class couplingSuggestionOut(BaseModel):
+    suggestions: List[CouplingViolationFix]  # List of suggestions for each coupling violation
 
 
