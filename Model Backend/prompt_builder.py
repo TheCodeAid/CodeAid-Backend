@@ -1,5 +1,6 @@
 import json
-from models import FileWithDependencies, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput,Dependency
+from typing import List
+from models import FileWithDependencies, RefactoredFile, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput,Dependency
 
 
 class PromptBuilder:
@@ -133,8 +134,8 @@ class PromptBuilder:
         ])
     
     @staticmethod
-    def refactor_dependencies(file: RefactoringRequestData) -> str:
-        code = PromptBuilder.build_code_bundle_refactor(file)
+    def refactor_dependencies( old_main_file: str, dependencies: list[Dependency] , refactored_files:  list[RefactoredFile]) -> str:
+        code = PromptBuilder.build_code_bundle_refactor_dep(old_main_file, dependencies, refactored_files)
         return "\n".join([
             "You are an expert Java developer specialized in updating all provided dependency files to be compatible with a newly refactored version of a Java class.",
 
