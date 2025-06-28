@@ -123,7 +123,7 @@ class PromptBuilder:
             "You are an expert Java developer specialized in applying Single Responsibility and Open-Closed principles through code refactoring.",
             "You will be given one main Java file, along with a structured JSON detailing the detected Single Responsibility, Open-Closed violations in the main file.",
             "Your task is to refactor the code to eliminate these violations while maintaining and improving overall code clarity and design.",
-            "",
+
             "For reference, here are brief descriptions of the SRP and OCP principles:",
             "- SRP (Single Responsibility): A class should have only one reason to change, i.e., one responsibility.",
             "- OCP (Open/Closed): Classes should be open for extension, but closed for modification.",
@@ -131,30 +131,33 @@ class PromptBuilder:
             "After making initial changes, re-evaluate the result and improve it further if needed.",
             "Then, reflect on the outcome: did you miss anything? Did your refactoring introduce new issues? If so, revise accordingly.",
             "You should return the main file in case of being updated with its updated content.",
-            "You should return the created files with its content.",
+            "You should return the created files with their content.",
             "Never add multiple classes/enums/interfaces in the same file; if needed, create a new file for each.",
             "Don't return a file unless it is updated or created.",
-            "",
+            "Don't return a code with syntax errors.",
+
             "## Critical Output and Formatting Rules:",
-            "1. **Comment Formatting for Unfixable Dependencies:** This is a strict requirement. If a dependency cannot be updated due to missing context, you must leave a comment. IT IS CRITICAL that you add a line break (`\\n`) immediately after the comment. The code that follows the comment MUST start on a new line to avoid compilation errors.",
+            "1. **Comment Formatting for Unfixable Dependencies:** This is a strict requirement. If a dependency cannot be updated due to missing context, you must leave a comment. IT IS CRITICAL that you add a real line break after the comment. The code that follows the comment MUST start on a new line to avoid compilation errors.",
             "2. **No Extra Content:** Do not include any explanation, introduction, or conclusion outside the final JSON output.",
-            "3. **Code Formatting:** Return the code in one line without extra spaces or break lines. Don't add any comments.",
-            "4. **JSON Structure:** You must follow the format defined in the Pydantic schema for the refactoring output.",
-            "",
+            "3. **Code Formatting:** Return the code with proper indentation and real newlines. DO NOT encode line breaks as '\\n'. The code must be syntactically valid and parsable by a Java parser.",
+            "4. **No Escaped Strings:** Do NOT escape newlines, quotes, or slashes. Return clean, raw Java code within the JSON.",
+            "5. **JSON Structure:** You must follow the format defined in the Pydantic schema for the refactoring output.",
+
             "Be precise, complete, and objective. If no changes are needed, reflect that in the response.",
+
             "## Code:",
             json.dumps(code["prompt"], ensure_ascii=False),
-            "",
+
             "## SO Violations:",
             json.dumps(code["violations"], ensure_ascii=False),
-            "",
+
             "## Pydantic Details:",
             json.dumps(RefactoringOutput.model_json_schema(), ensure_ascii=False),
-            "",
+
             "## Refactored Code:",
             "```json"
         ])
-    
+
     @staticmethod
     def refactor_dependencies( old_main_file: str, dependencies: list[Dependency] , refactored_files:  list[RefactoredFile]) -> str:
         code = PromptBuilder.build_code_bundle_refactor_dep(old_main_file, dependencies, refactored_files)
@@ -198,7 +201,7 @@ class PromptBuilder:
             "2. **No Extra Content:** Do not include any explanation, introduction, or conclusion outside the final JSON output.",
             "3. **Code Formatting:** Return the code in one line without extra spaces or break lines. Don't add any comments.",
             "4. **JSON Structure:** You must follow the format defined in the Pydantic schema for the refactoring output.",
-
+            "Don't return a code with syntax errors.",
             "Be precise, complete, and objective. If no changes are needed, reflect that in the response.",
             "## Old Main File:",
             json.dumps(code["old"], ensure_ascii=False),
@@ -239,6 +242,7 @@ class PromptBuilder:
             "- Did you miss any smell?",
             "- Did you misclassify anything?",
             "- Could your reasoning be more precise?",
+            "If no dependencies found and the main file has no coupling smells return single empty list.",
             "",
             "Always respond in a structured JSON format. Do not include any explanation outside the JSON.",
             "You have to extract Coupling code smells from Code according the Pydantic details.",
@@ -278,17 +282,6 @@ class PromptBuilder:
             "- Suggest **concise step-by-step refactoring solutions** for each violation without providing code.",
             "- Use design patterns (e.g., Dependency Injection, Observer, Interface Segregation) where relevant.",
             "- Avoid repeating the same general advice; be specific to the code structure I provide.",
-            "",
-            "Please format the output clearly, like:",
-            "===",
-            "Coupling Violation: [Short Description]",
-            "Files Involved: [file1.java] → [file2.java]",
-            "",
-            "Suggested Steps:",
-            "1. ...",
-            "2. ...",
-            "3. ...",
-            "===",
             "",
             "Always respond in a structured JSON format. Do not include any explanation outside the JSON.",
             "You have to return the fixes according to the Pydantic schema below.",

@@ -90,11 +90,11 @@ class couplingSuggestionIn(BaseModel):
 
 #output pydantics
 class CouplingViolationFix(BaseModel):
-    smell: str  # e.g., "Message Chains"
-    files_involved: List[str]  # e.g., ["AverageTemperatureChart.java", "XYSeriesRenderer.java"]
-    suggested_steps: List[str]  # Step-by-step suggestions
+    smell: str
+    files_involved: List[str]
+    suggested_steps: List[str]
 
 class couplingSuggestionOut(BaseModel):
-    suggestions: List[CouplingViolationFix]  # List of suggestions for each coupling violation
+    suggestions: List[CouplingViolationFix]
 
 
