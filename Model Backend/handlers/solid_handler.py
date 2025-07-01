@@ -22,8 +22,8 @@ class SolidHandler:
         return response[0].get("generated_text", {})
         # return  None
 
-    def refactorDependencyFiles(self, old_main_file: str, dependencies: list[Dependency] , refactored_files: RefactoringOutput):
-        prompt = PromptBuilder.refactor_dependencies(old_main_file, dependencies, refactored_files)
+    def refactorDependencyFiles(self, old_main_file: str, dependents: list[Dependency] , refactored_files: RefactoringOutput):
+        prompt = PromptBuilder.refactor_dependencies(old_main_file, dependents, refactored_files)
         response = self.llmR.send_prompt(prompt)
         print("response ", response)
         return response[0].get("generated_text", {})

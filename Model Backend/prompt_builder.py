@@ -25,7 +25,7 @@ class PromptBuilder:
         }
     
     @staticmethod
-    def build_code_bundle_refactor_dep(old_main_file: str, dependencies: list[Dependency], refactored_files: RefactoringOutput) -> dict:
+    def build_code_bundle_refactor_dep(old_main_file: str, dependents: list[Dependency], refactored_files: list[RefactoredFile]) -> dict:
         return {
             "old": {
                 "mainFileContent": old_main_file,
@@ -33,11 +33,11 @@ class PromptBuilder:
             "new": {
                 "refactored_files": refactored_files, 
             },
-            "dependencies": [
+            "dependents": [
                 {
                     "filePath": dep.depFilePath,
                     "fileContent": dep.depFileContent
-                } for dep in dependencies
+                } for dep in dependents
             ]  
         }
     
@@ -159,19 +159,19 @@ class PromptBuilder:
         ])
 
     @staticmethod
-    def refactor_dependencies( old_main_file: str, dependencies: list[Dependency] , refactored_files:  list[RefactoredFile]) -> str:
-        code = PromptBuilder.build_code_bundle_refactor_dep(old_main_file, dependencies, refactored_files)
+    def refactor_dependencies( old_main_file: str, dependents: list[Dependency] , refactored_files:  list[RefactoredFile]) -> str:
+        code = PromptBuilder.build_code_bundle_refactor_dep(old_main_file, dependents, refactored_files)
         return "\n".join([
-            "You are an expert Java developer specialized in updating all provided dependency files to be compatible with a newly refactored version of a Java class.",
+            "You are an expert Java developer specialized in updating all provided dependent files to be compatible with a newly refactored version of a Java class.",
 
             "Context:",
             "You are given:",
             "- The original version of the main Java class (Main File - OLD)",
             "- The refactored version of the main class (Main File - NEW)",
             "- Any new classes created during refactoring",
-            "- A list of dependency files that previously referenced the old main file",
+            "- A list of dependent files that previously referenced the old main file",
 
-            "These dependencies must now be updated to reference and interact correctly with the new main file and its updated structure.",
+            "These dependents must now be updated to reference and interact correctly with the new main file and its updated structure.",
             "Follow this step-by-step process:",
 
             "1. Understand the changes:",
@@ -179,8 +179,8 @@ class PromptBuilder:
             "- Identify renamed, moved, or removed methods, fields, and classes.",
             "- Understand how the newly created classes relate to the refactoring.",
 
-            "2. Update dependencies:",
-            "- For each dependency file:",
+            "2. Update dependents:",
+            "- For each dependent file:",
             "    - Locate references to the old structure.",
             "    - Modify imports, method calls, field accesses, or object instantiations to match the new design.",
             "    - Ensure compatibility with newly introduced classes or interfaces.",
@@ -209,8 +209,8 @@ class PromptBuilder:
             "## New Main file with new classes created during refactoring:",
             json.dumps(code["new"], ensure_ascii=False),
             "",
-            "## Dependencies:",
-            json.dumps(code["dependencies"], ensure_ascii=False),
+            "## Dependents:",
+            json.dumps(code["dependents"], ensure_ascii=False),
             "",
             "## Pydantic Details:",
             json.dumps(RefactoringOutput.model_json_schema(), ensure_ascii=False),

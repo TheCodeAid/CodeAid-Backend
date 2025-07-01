@@ -64,7 +64,7 @@ class RefactoringWrappedData(BaseModel):
     chunk_id: int
     mainFilePath: str
     mainFileContent: str
-    dependencies: List[Dependency]
+    dependents: List[Dependency]
 
 class RefactoringRequestData(BaseModel):
     data: List[RefactoringWrappedData]
