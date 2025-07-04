@@ -5,7 +5,7 @@ import requests
 
 headers = {
 	"Accept" : "application/json",
-	"Authorization": "Bearer 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",
+	"Authorization": "Bearer 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",
 	"Content-Type": "application/json"
 }
 

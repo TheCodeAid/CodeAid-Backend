@@ -1,6 +1,6 @@
 from prompt_builder import PromptBuilder
 from llm_client import LLMClient
-from models import FileWithDependencies, RefactoringRequestData, RefactoringOutput,Dependency
+from models import FileWithDependencies, RefactoringRequestData, RefactoringOutput,Dependency, RefactoredFile
 
 class SolidHandler:
     def __init__(self, llmD: LLMClient, llmR: LLMClient):

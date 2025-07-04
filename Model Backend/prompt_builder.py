@@ -1,11 +1,6 @@
 import json
-from typing import Dict, List
 from models import FileWithDependencies, RefactoredFile, RefactoringOutput, RefactoringRequestData, SolidDetectionOutput, CouplingDetectionOutput,Dependency, couplingSuggestionIn, couplingSuggestionOut
-
-
-class PromptBuilder:
-    
-    from models import RefactoringRequestData
+from typing import List
 
 class PromptBuilder:
 
@@ -62,7 +57,8 @@ class PromptBuilder:
                 for violation in input_data.coupling_smells
             ]
         }
-    
+
+
     @staticmethod
     def build_code_bundle(file: FileWithDependencies):
         return {
@@ -115,7 +111,6 @@ class PromptBuilder:
             "json"
         ])
 
-
     @staticmethod
     def refactor_solid_prompt(file: RefactoringRequestData) -> str:
         code = PromptBuilder.build_code_bundle_refactor(file)
@@ -135,13 +130,13 @@ class PromptBuilder:
             "Never add multiple classes/enums/interfaces in the same file; if needed, create a new file for each.",
             "Don't return a file unless it is updated or created.",
             "Don't return a code with syntax errors.",
+            "Don't add any comments",
 
             "## Critical Output and Formatting Rules:",
-            "1. **Comment Formatting for Unfixable Dependencies:** This is a strict requirement. If a dependency cannot be updated due to missing context, you must leave a comment. IT IS CRITICAL that you add a real line break after the comment. The code that follows the comment MUST start on a new line to avoid compilation errors.",
-            "2. **No Extra Content:** Do not include any explanation, introduction, or conclusion outside the final JSON output.",
-            "3. **Code Formatting:** Return the code with proper indentation and real newlines. DO NOT encode line breaks as '\\n'. The code must be syntactically valid and parsable by a Java parser.",
-            "4. **No Escaped Strings:** Do NOT escape newlines, quotes, or slashes. Return clean, raw Java code within the JSON.",
-            "5. **JSON Structure:** You must follow the format defined in the Pydantic schema for the refactoring output.",
+            "1. **No Extra Content:** Do not include any explanation, introduction, or conclusion outside the final JSON output.",
+            "2. **Code Formatting:** The code must be syntactically valid and parsable by a Java parser.",
+            "3. **No Escaped Strings:** Do NOT escape newlines, quotes, or slashes. Return clean, raw Java code within the JSON.",
+            "4. **JSON Structure:** You must follow the format defined in the Pydantic schema for the refactoring output.",
 
             "Be precise, complete, and objective. If no changes are needed, reflect that in the response.",
 
@@ -218,7 +213,6 @@ class PromptBuilder:
             "## Refactored Dependencies:",
             "```json"
         ])
-
 
     @staticmethod
     def coupling_prompt(file: FileWithDependencies) -> str:
@@ -297,16 +291,3 @@ class PromptBuilder:
             "## Suggested Fixes:",
             "```json"
         ])
-
-    # @staticmethod
-    # def refactor_coupling_prompt(file: FileWithDependencies) -> str:
-    #     code = PromptBuilder.build_code_bundle(file)
-    #     return "\n".join([
-    #         "You are a senior software engineer.",
-    #         "Refactor the code to reduce coupling smells. Return only the refactored version of the main file.",
-    #         "## Code:",
-    #         json.dumps(code, ensure_ascii=False),
-    #         "",
-    #         "## Response format:",
-    #         '{"refactoredCode": "..."}'
-    #     ])
